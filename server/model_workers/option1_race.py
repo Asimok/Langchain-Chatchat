@@ -13,9 +13,10 @@ def format_template(input_):
 
 
 def get_res(inputs):
+    print('*\n' * 20)
     print('new')
     print(inputs)
-    url = "http://219.216.64.231:27034/option1_race"
+    url = "http://219.216.64.231:27034/option1_race_api"
     timeout = 60  # 超时设置
 
     # 生成超参数

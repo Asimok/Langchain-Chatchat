@@ -9,6 +9,7 @@ from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
                      DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
 from typing import List, Dict
 
+
 chat_box = ChatBox(
     assistant_avatar=os.path.join(
         "img",
@@ -37,7 +38,7 @@ def get_messages_history(history_len: int, content_in_expander: bool = False) ->
     return chat_box.filter_history(history_len=history_len, filter=filter)
 
 
-def dialogue_page(api: ApiRequest, is_lite: bool = False):
+def knowledge_bank_page(api: ApiRequest, is_lite: bool = False):
     if not chat_box.chat_inited:
         default_model = api.get_default_llm_model()[0]
         st.toast(
@@ -58,10 +59,10 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             st.toast(text)
 
         dialogue_modes = ["LLM 对话",
-                          "知识库问答",
-                          "搜索引擎问答",
-                          "自定义Agent问答",
-                          ]
+                            "知识库问答",
+                            "搜索引擎问答",
+                            "自定义Agent问答",
+                            ]
         dialogue_mode = st.selectbox("请选择对话模式：",
                                      dialogue_modes,
                                      index=0,
@@ -181,9 +182,9 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
 
     def on_feedback(
-            feedback,
-            chat_history_id: str = "",
-            history_index: int = -1,
+        feedback,
+        chat_history_id: str = "",
+        history_index: int = -1,
     ):
         reason = feedback["text"]
         score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
@@ -205,8 +206,6 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
             text = ""
             # 0 -200 随机数
             chat_history_id = random.randint(0, 200)
-            print('prompt', prompt)
-            print(api)
             r = api.chat_chat(prompt,
                               history=history,
                               model=llm_model,
@@ -222,7 +221,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
 
             metadata = {
                 "chat_history_id": chat_history_id,
-            }
+                }
             chat_box.update_msg(text, streaming=False, metadata=metadata)  # 更新最终的字符串，去除光标
             chat_box.show_feedback(**feedback_kwargs,
                                    key=chat_history_id,

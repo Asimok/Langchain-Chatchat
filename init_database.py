@@ -121,10 +121,12 @@ if __name__ == "__main__":
     print(f"总计用时： {end_time-start_time}")
 
 """
-python init_database.py -i -n NCR -e bge-large-zh
-python init_database.py -i -n CCLUE-MRC -e bge-large-zh
-python init_database.py -i -n RACE -e m3e-large
-python init_database.py -i -n QuALITY -e m3e-large
+nohup python -u init_database.py -i -n NCR -e bge-large-zh > ncr.log 2>&1 &
+nohup python -u init_database.py -i -n CCLUE-MRC -e bge-large-zh > cclue-mrc.log 2>&1 &
+nohup python -u init_database.py -i -n RACE -e m3e-large > race.log 2>&1 &
+nohup python -u init_database.py -i -n QuALITY -e m3e-large > quality.log 2>&1 &
+
+
 python init_database.py -i -n QuALITY+RACE -e m3e-large
 python init_database.py -i -n NCR+CCLUE-MRC -e bge-large-zh
 """

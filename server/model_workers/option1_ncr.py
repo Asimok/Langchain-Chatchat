@@ -70,6 +70,7 @@ class Option1NCRWorker(ApiModelWorker):
         self.version = version
 
     def do_chat(self, params: ApiChatParams) -> Iterator[Dict]:
+        print('do chat')
 
         result = get_res(params.messages)
 
