@@ -9,3 +9,4 @@ from .baichuan import BaiChuanWorker
 from .azure import AzureWorker
 from .TechGPT import TechGPTWorker
 from .option1_ncr import Option1NCRWorker
+from .option1_cclue import Option1CCLUEWorker

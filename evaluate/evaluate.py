@@ -6,8 +6,7 @@ from sklearn.metrics import accuracy_score, classification_report
 from tqdm import tqdm
 
 
-def get_response(inputs):
-    url = "http://219.216.64.231:27032/option1_ncr_api"
+def get_response(url, inputs, max_seq_length=2048, split_token='<question>:\n'):
     # 生成超参数
     max_new_tokens = 1
     top_p = 0.99
@@ -17,11 +16,13 @@ def get_response(inputs):
 
     payload = json.dumps({
         "inputs": inputs,
+        "max_seq_length": max_seq_length,
         "max_new_tokens": max_new_tokens,
         "top_p": top_p,
         "temperature": temperature,
         "repetition_penalty": repetition_penalty,
-        "do_sample": do_sample
+        "do_sample": do_sample,
+        "split_token": split_token
     })
     headers = {
         'Content-Type': 'application/json'
@@ -31,7 +32,7 @@ def get_response(inputs):
     return output
 
 
-def predict(eval_file_path, save_path, ):
+def predict(url, eval_file_path, save_path, max_seq_length=2048, split_token='<question>:\n'):
     # makedir
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -46,7 +47,7 @@ def predict(eval_file_path, save_path, ):
         req_input = conv["prompt"]
         label = conv["label"]
         true_labels.append(label)
-        pred = get_response(req_input)
+        pred = get_response(url, req_input, max_seq_length=max_seq_length, split_token=split_token)
         pred_labels.append(pred)
         # 格式化输出
         if label == pred:
@@ -71,5 +72,5 @@ def predict(eval_file_path, save_path, ):
 if __name__ == '__main__':
     #  测试 get_response
     req = 'Please determine if the following paragraphs can answer the question,output yes or no in json format:\nquestion:\nWhy is Si retirement so significant to the Space Exploration Team? \npassage:\n"Spaceman on a Spree" is a short story written by Mack Reynolds. The story follows the adventures of a retired space pilot named Seymour Pond after he receives a golden watch as a farewell gift from his colleagues. Despite feeling underwhelmed by the token gesture, Seymour sets out on a spree across the galaxy, encountering various challenges along the way. He meets new people, learns valuable lessons, and ultimately gains a sense of purpose and fulfillment in his post-retirement years.'
-    res = get_response(req)
+    res = get_response(url="http://219.216.64.231:27032/option1_ncr_api", inputs=req)
     print(res)

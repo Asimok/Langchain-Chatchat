@@ -15,7 +15,7 @@ def format_template(input_):
 def get_res(inputs):
     print('new')
     print(inputs)
-    url = "http://219.216.64.231:27032/option1_ncr_api"
+    url = "http://219.216.64.231:27034/option1_race"
     timeout = 60  # 超时设置
 
     # 生成超参数
@@ -26,7 +26,7 @@ def get_res(inputs):
     do_sample = True
     # 只需要支持单轮对话
 
-    print('option1_ncr_api llm_input:\n')
+    print('option1_race_api llm_input:\n')
     llm_input = ''
     for his_input in inputs[-1:]:
         llm_input += format_template(his_input)
@@ -52,13 +52,13 @@ def get_res(inputs):
     return result
 
 
-class Option1NCRWorker(ApiModelWorker):
+class Option1RACEWorker(ApiModelWorker):
     DEFAULT_EMBED_MODEL = "text_embedding"
 
     def __init__(
             self,
             *,
-            model_names: List[str] = ["techgpt-api"],
+            model_names: List[str] = ["option1-race-api"],
             controller_addr: str = None,
             worker_addr: str = None,
             version: Literal["chatglm_turbo"] = "7b",
