@@ -15,6 +15,8 @@ api = ApiRequest(base_url=api_address())
 
 if __name__ == "__main__":
     is_lite = "lite" in sys.argv
+
+
     st.set_page_config(
         "KGLQA WebUI",
         os.path.join("img", "chatchat_icon_blue_square_v2.png"),
@@ -23,7 +25,8 @@ if __name__ == "__main__":
             'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
             'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
             'About': f"""欢迎使用 KGLQA WebUI {VERSION}！"""
-        }
+        },
+        layout='wide',
     )
 
     pages = {
@@ -75,3 +78,11 @@ if __name__ == "__main__":
 
     if selected_page in pages:
         pages[selected_page]["func"](api=api, is_lite=is_lite)
+
+    hide_default_format = """
+           <style>
+           #MainMenu {visibility: hidden; }
+           footer {visibility: hidden;}
+           </style>
+           """
+    st.markdown(hide_default_format, unsafe_allow_html=True)

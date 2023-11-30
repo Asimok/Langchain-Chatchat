@@ -1,5 +1,6 @@
 import random
 
+import requests
 import streamlit as st
 from webui_pages.utils import *
 from streamlit_chatbox import *
@@ -11,6 +12,58 @@ from typing import List, Dict
 
 global_ans = False
 KEYSENTENCE = '测试'
+LABEL_TO_ID_DICT = {"A": 0, "B": 1, "C": 2, "D": 3}
+
+
+def get_key_sentence(language, query, options, context, max_word_count=1536):
+    if language == 'zh':
+        url = 'http://219.216.64.75:27030/key_sentence_zh'
+    else:
+        url = 'http://219.216.64.75:27030/key_sentence_en'
+    data = {
+        "context": context,
+        "query": query,
+        "options": options,
+        "max_word_count": max_word_count
+    }
+    # request post
+    response = requests.post(url, json=data)
+    response = response.json()
+    return response
+
+
+def add_color(text):
+    return f':red[{text}]'
+
+
+def match_option(options, answer):
+    if answer is None:
+        return None
+    deal_options = []
+    for split_token in ['B#', 'C#', 'D#']:
+        temp = str(options).split(split_token)
+        if len(temp) > 1:
+            deal_options.append(temp[0])
+            options = split_token + temp[1]
+    if len(temp) > 1:
+        deal_options.append(split_token + temp[1])
+    if len(deal_options) == 0:
+        return '请以标准格式输入选项！'
+    return deal_options[LABEL_TO_ID_DICT[answer]]
+
+
+def render_key_sentence(language, question, options, context, max_word_count=1536):
+    res = get_key_sentence(language=language, query=question, options=options, context=context, max_word_count=max_word_count)
+    context = res['context']
+    select_idx = set(res['select_idx'])
+    render_context = ''
+    for i, c in enumerate(context):
+        if len(c) > 0:
+            if i in select_idx:
+                render_context += add_color(c)
+            else:
+                render_context += c
+    return render_context
 
 
 def key_sentence_page(api: ApiRequest, is_lite: bool = False):
@@ -94,13 +147,12 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
 
     with st.container():
         with st.container():
-            passage = st.text_area("段落", placeholder="请输入段落... ", height=300, key="passage")
-        with st.container():
-            option_c, question_c = st.columns(2)
+            passage_c, option_c = st.columns([3, 1])
+            with passage_c:
+                passage = st.text_area("段落", placeholder="请输入段落... ", height=250, key="passage")
             with option_c:
-                options = st.text_area("选项", placeholder="请输入选项...", height=200, key="options")
-            with question_c:
-                question = st.text_area("问题", placeholder="请输入问题...", height=200, key="question")
+                options = st.text_area("选项", placeholder="请输入选项...", height=250, key="options")
+            question = st.text_input("问题", placeholder="请输入问题...", key="question")
 
     st.divider()
     with st.container():
@@ -108,12 +160,16 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
         answer_area = st.empty()
         if global_ans:
             key_sentence = key_sentence_area.chat_message("assistant")
-            key_sentence.text("算法选择的关键句如下所示：")
-            key_sentence.write(KEYSENTENCE)
+            key_sentence.caption("算法选择的关键句如下所示：")
+            key_sentence.markdown(KEYSENTENCE)
             answer = answer_area.chat_message("assistant")
 
     def submit():
-        global global_ans
+        global global_ans, KEYSENTENCE
+
+        render_context = render_key_sentence(language='zh', question=question, options=options, context=passage, max_word_count=200)
+        KEYSENTENCE = render_context
+
         prompt_ = format_instruction(prompt_template_name, passage, question, options)
         text_ = ""
         res = api.chat_chat(prompt_,
@@ -129,10 +185,10 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
             if len(text_) > 0:
                 global_ans = True
                 key_sentence = key_sentence_area.chat_message("assistant")
-                key_sentence.text("算法选择的关键句如下所示：")
-                key_sentence.write(KEYSENTENCE)
+                key_sentence.caption("算法选择的关键句如下所示：")
+                key_sentence.markdown(KEYSENTENCE)
                 answer = answer_area.chat_message("assistant")
-                answer.text(text_)
+                answer.text(f'答案:{match_option(options, text_)}')
 
     def reset_history():
         global global_ans
@@ -151,4 +207,5 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
             with clear_c:
                 st.button("清空", type="secondary", use_container_width=True, on_click=reset_history)
             with submit_c:
-                st.button("推理", type="primary", use_container_width=True, on_click=submit)
+                if st.button("推理", type="primary", use_container_width=True):
+                    submit()
