@@ -16,7 +16,6 @@ api = ApiRequest(base_url=api_address())
 if __name__ == "__main__":
     is_lite = "lite" in sys.argv
 
-
     st.set_page_config(
         "KGLQA WebUI",
         os.path.join("img", "chatchat_icon_blue_square_v2.png"),
@@ -30,7 +29,7 @@ if __name__ == "__main__":
     )
 
     pages = {
-        "关键句检索方案": {
+        "关键句选择方案": {
             "icon": "chat",
             "func": key_sentence_page,
         },

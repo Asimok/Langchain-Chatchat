@@ -1,75 +1,109 @@
 import random
 
+import requests
 import streamlit as st
 from webui_pages.utils import *
-from streamlit_chatbox import *
-from datetime import datetime
-import os
-from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
-from typing import List, Dict
+
+from configs import (PROMPT_TEMPLATES)
+
+global_ans = False
+KEYSENTENCE = ''
+KNOWLEDGEBANK = ''
+render_pair = []
+render_context, render_captions = '', ''
+LABEL_TO_ID_DICT = {"A": 0, "B": 1, "C": 2, "D": 3}
 
 
-chat_box = ChatBox(
-    assistant_avatar=os.path.join(
-        "img",
-        "chatchat_icon_blue_square_v2.png"
-    )
-)
+def get_caption(language, context, caption_max_seq_length):
+    if language == 'zh':
+        url = 'http://219.216.64.75:27031/knowledge_bank_zh'
+    else:
+        url = 'http://219.216.64.75:27031/knowledge_bank_en'
+    data = {
+        "context": context,
+        "caption_max_seq_length": caption_max_seq_length,
+    }
+    response = requests.post(url, json=data)
+    response = response.json()
+    return response
 
 
-def get_messages_history(history_len: int, content_in_expander: bool = False) -> List[Dict]:
-    '''
-    返回消息历史。
-    content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
-    '''
+def get_caption_and_rel(language, query, options, context_data, caption_data, max_word_count=1536):
+    if language == 'zh':
+        url = 'http://219.216.64.75:27031/knowledge_bank_get_rel_zh'
+    else:
+        url = 'http://219.216.64.75:27031/knowledge_bank_get_rel_en'
+    data = {
+        "query": query,
+        "options": options,
+        "context_data": context_data,
+        "caption_data": caption_data,
+        "max_word_count": max_word_count,
+    }
+    print(data)
+    # request post
+    response = requests.post(url, json=data)
+    response = response.json()
+    return response
 
-    def filter(msg):
-        content = [x for x in msg["elements"] if x._output_method in ["markdown", "text"]]
-        if not content_in_expander:
-            content = [x for x in content if not x._in_expander]
-        content = [x.content for x in content]
 
-        return {
-            "role": msg["role"],
-            "content": "\n\n".join(content),
-        }
+def add_color(text):
+    return f':red[{text}]'
 
-    return chat_box.filter_history(history_len=history_len, filter=filter)
+
+def match_option(options, answer):
+    if answer is None:
+        return None
+    deal_options = []
+    for split_token in ['B#', 'C#', 'D#']:
+        temp = str(options).split(split_token)
+        if len(temp) > 1:
+            deal_options.append(temp[0])
+            options = split_token + temp[1]
+    if len(temp) > 1:
+        deal_options.append(split_token + temp[1])
+    if len(deal_options) == 0:
+        return '请以标准格式输入选项！'
+    return deal_options[LABEL_TO_ID_DICT[answer]]
+
+
+def render_caption_and_rel(language, query, options, context_data, caption_data, max_word_count=1536):
+    res = get_caption_and_rel(language, query, options, context_data, caption_data, max_word_count)
+    context_data = res['context_data']
+    contexts_idx = res['contexts_idx']
+    captions_data = res['captions_data']
+    captions_idx = res['captions_idx']
+    # TODO 组合上下文和摘要
+    render_context = ''
+    render_captions = []
+    for i, c in enumerate(context_data):
+        if i in contexts_idx:
+            render_context += add_color(c)
+        else:
+            render_context += c
+    for i, c in enumerate(captions_data):
+        if i in captions_idx:
+            render_captions.append(add_color(c))
+        else:
+            render_captions.append(c)
+    return render_context, render_captions
+
+
+def render_knowledge_bank(language, context, caption_max_seq_length=250):
+    res = get_caption(language, context, caption_max_seq_length=caption_max_seq_length)
+
+    chunks = res['chunks']
+    chunk_captions = res['chunk_captions']
+    render_pair = []
+    for i, c in enumerate(chunks):
+        render_pair.append((c, add_color(chunk_captions[i])))
+    return render_pair, chunk_captions
 
 
 def knowledge_bank_page(api: ApiRequest, is_lite: bool = False):
-    if not chat_box.chat_inited:
-        default_model = api.get_default_llm_model()[0]
-        st.toast(
-            f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
-            f"当前运行的模型`{default_model}`, 您可以开始提问了."
-        )
-        chat_box.init_session()
+    global global_ans, KEYSENTENCE, KNOWLEDGEBANK
 
     with st.sidebar:
-        # TODO: 对话模型与会话绑定
-        def on_mode_change():
-            mode = st.session_state.dialogue_mode
-            text = f"已切换到 {mode} 模式。"
-            if mode == "知识库问答":
-                cur_kb = st.session_state.get("selected_kb")
-                if cur_kb:
-                    text = f"{text} 当前知识库： `{cur_kb}`。"
-            st.toast(text)
-
-        dialogue_modes = ["LLM 对话",
-                            "知识库问答",
-                            "搜索引擎问答",
-                            "自定义Agent问答",
-                            ]
-        dialogue_mode = st.selectbox("请选择对话模式：",
-                                     dialogue_modes,
-                                     index=0,
-                                     on_change=on_mode_change,
-                                     key="dialogue_mode",
-                                     )
-
         def on_llm_change():
             if llm_model:
                 config = api.get_model_config(llm_model)
@@ -115,13 +149,7 @@ def knowledge_bank_page(api: ApiRequest, is_lite: bool = False):
                     st.success(msg)
                     st.session_state["prev_llm_model"] = llm_model
 
-        index_prompt = {
-            "LLM 对话": "llm_chat",
-            "自定义Agent问答": "agent_chat",
-            "搜索引擎问答": "search_engine_chat",
-            "知识库问答": "knowledge_base_chat",
-        }
-        prompt_templates_kb_list = list(PROMPT_TEMPLATES[index_prompt[dialogue_mode]].keys())
+        prompt_templates_kb_list = list(PROMPT_TEMPLATES["knowledge_bank_chat"].keys())
         prompt_template_name = prompt_templates_kb_list[0]
         if "prompt_template_select" not in st.session_state:
             st.session_state.prompt_template_select = prompt_templates_kb_list[0]
@@ -138,197 +166,137 @@ def knowledge_bank_page(api: ApiRequest, is_lite: bool = False):
             key="prompt_template_select",
         )
         prompt_template_name = st.session_state.prompt_template_select
-        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
-        history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
 
-        def on_kb_change():
-            st.toast(f"已加载知识库： {st.session_state.selected_kb}")
+    def format_instruction(prompt_template_name_, passage_, caption_, question_, options_):
+        print(prompt_template_name_)
+        if prompt_template_name_ == "instruction-caption-zh":
+            prefix = (
+                '阅读以下段落、摘要和问题，然后从选项中选择正确答案，答案应为A、B、C、D中的一个。\n\n')
+            passage_ = f'<段落>:\n{passage_}\n\n'
+            caption_ = f'<摘要>:\n{caption_}\n\n'
+            question_ = f'<问题>:\n{question_}\n\n'
+            option = f'<选项>:\n{options_}\n\n'
+            suffix = f"<答案>:\n"
+            prompt_ = ''.join([prefix, passage_, caption_, question_, option, suffix])
+            return prompt_
+        elif prompt_template_name_ == "instruction-caption-en":
+            prefix = (
+                'Read the following passage, summary and question, then choose the right answer from options, the answer '
+                'should be one of A, B, C, D.\n\n')
+            passage_ = f'<passage>:\n{passage_}\n\n'
+            caption_ = f'<summary>:\n{caption_}\n\n'
+            question_ = f'<question>:\n{question_}\n\n'
+            option = f'<options>:\n{options_}\n\n'
+            suffix = f"<answer>:\n"
+            prompt_ = ''.join([prefix, passage_, caption_, question_, option, suffix])
+            return prompt_
 
-        if dialogue_mode == "知识库问答":
-            with st.expander("知识库配置", True):
-                kb_list = api.list_knowledge_bases()
-                index = 0
-                if DEFAULT_KNOWLEDGE_BASE in kb_list:
-                    index = kb_list.index(DEFAULT_KNOWLEDGE_BASE)
-                selected_kb = st.selectbox(
-                    "请选择知识库：",
-                    kb_list,
-                    index=index,
-                    on_change=on_kb_change,
-                    key="selected_kb",
-                )
-                kb_top_k = st.number_input("匹配知识条数：", 1, 20, VECTOR_SEARCH_TOP_K)
+    with st.container():
+        with st.container():
+            passage_c, option_c = st.columns([3, 1])
+            with passage_c:
+                passage = st.text_area("段落", placeholder="请输入段落... ", height=250, key="passage")
+            with option_c:
+                options = st.text_area("选项", placeholder="请输入选项...", height=250, key="options")
+            question = st.text_input("问题", placeholder="请输入问题...", key="question")
 
-                ## Bge 模型会超过1
-                score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, float(SCORE_THRESHOLD), 0.01)
+    st.divider()
+    with st.container():
+        with st.expander("算法推理过程", expanded=True):
+            knowledge_bank_area = st.empty()
+            key_sentence_area = st.empty()
+            caption_divider = st.empty()
+            select_key_sentence_area = st.empty()
+            select_key_caption_area = st.empty()
+        answer_area = st.empty()
+        # if global_ans:
+        #     knowledge_bank = knowledge_bank_area.chat_message("assistant")
+        #     knowledge_bank.caption("挖掘的背景知识如下所示：")
+        #     knowledge_bank.markdown(KNOWLEDGEBANK)
+        #     key_sentence = key_sentence_area.chat_message("assistant")
+        #     key_sentence.caption("算法选择的关键句如下所示：")
+        #     key_sentence.markdown(KEYSENTENCE)
+        #     answer = answer_area.chat_message("assistant")
 
-        elif dialogue_mode == "搜索引擎问答":
-            search_engine_list = api.list_search_engines()
-            if DEFAULT_SEARCH_ENGINE in search_engine_list:
-                index = search_engine_list.index(DEFAULT_SEARCH_ENGINE)
-            else:
-                index = search_engine_list.index("duckduckgo") if "duckduckgo" in search_engine_list else 0
-            with st.expander("搜索引擎配置", True):
-                search_engine = st.selectbox(
-                    label="请选择搜索引擎",
-                    options=search_engine_list,
-                    index=index,
-                )
-                se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, SEARCH_ENGINE_TOP_K)
+    def render_knowledge_bank_area():
+        global render_pair
+        knowledge_bank = knowledge_bank_area.chat_message("assistant")
+        knowledge_bank.caption("挖掘的背景知识如下所示：")
+        for i, pair in enumerate(render_pair):
+            knowledge_bank.caption(f'段落{i + 1}原文：')
+            knowledge_bank.markdown(pair[0])
+            knowledge_bank.caption(f'段落{i + 1}摘要：')
+            knowledge_bank.markdown(pair[1])
+        caption_divider.divider()
 
-    # Display chat messages from history on app rerun
-    chat_box.output_messages()
+    def render_select_key_sentence_and_caption_area():
+        global render_pair, render_context, render_captions
+        select_key_sentence = select_key_sentence_area.chat_message("assistant")
+        select_key_sentence.caption(f'选择的上下文：')
+        select_key_sentence.markdown(render_context)
 
-    chat_input_placeholder = "请输入对话内容，换行请使用Shift+Enter "
+        select_key_caption = select_key_caption_area.chat_message("assistant")
+        select_key_caption.caption(f'选择的摘要：')
+        for caption_ in render_captions:
+            select_key_caption.markdown(caption_)
 
-    def on_feedback(
-        feedback,
-        chat_history_id: str = "",
-        history_index: int = -1,
-    ):
-        reason = feedback["text"]
-        score_int = chat_box.set_feedback(feedback=feedback, history_index=history_index)
-        api.chat_feedback(chat_history_id=chat_history_id,
-                          score=score_int,
-                          reason=reason)
-        st.session_state["need_rerun"] = True
+    def caption():
+        global render_pair, render_context, render_captions
+        render_pair, chunk_captions = render_knowledge_bank(language='zh', context=passage, caption_max_seq_length=250)
 
-    feedback_kwargs = {
-        "feedback_type": "thumbs",
-        "optional_text_label": "欢迎反馈您打分的理由",
-    }
+        render_knowledge_bank_area()
 
-    if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
-        history = get_messages_history(history_len)
-        chat_box.user_say(prompt)
-        if dialogue_mode == "LLM 对话":
-            chat_box.ai_say("正在思考...")
-            text = ""
-            # 0 -200 随机数
-            chat_history_id = random.randint(0, 200)
-            r = api.chat_chat(prompt,
-                              history=history,
-                              model=llm_model,
-                              prompt_name=prompt_template_name,
-                              temperature=temperature)
-            for t in r:
-                if error_msg := check_error_msg(t):  # check whether error occured
-                    st.error(error_msg)
-                    break
-                text += t.get("text", "")
-                chat_box.update_msg(text)
-                chat_history_id = t.get("chat_history_id", "")
+        render_context, render_captions = render_caption_and_rel(language='zh', query=question, options=options, context_data=passage, caption_data=chunk_captions, max_word_count=300)
 
-            metadata = {
-                "chat_history_id": chat_history_id,
-                }
-            chat_box.update_msg(text, streaming=False, metadata=metadata)  # 更新最终的字符串，去除光标
-            chat_box.show_feedback(**feedback_kwargs,
-                                   key=chat_history_id,
-                                   on_submit=on_feedback,
-                                   kwargs={"chat_history_id": chat_history_id, "history_index": len(chat_box.history) - 1})
+        render_select_key_sentence_and_caption_area()
 
-        elif dialogue_mode == "自定义Agent问答":
-            if not any(agent in llm_model for agent in SUPPORT_AGENT_MODEL):
-                chat_box.ai_say([
-                    f"正在思考... \n\n <span style='color:red'>该模型并没有进行Agent对齐，请更换支持Agent的模型获得更好的体验！</span>\n\n\n",
-                    Markdown("...", in_expander=True, title="思考过程", state="complete"),
+    def submit():
+        global global_ans, render_pair, render_context, render_captions
 
-                ])
-            else:
-                chat_box.ai_say([
-                    f"正在思考...",
-                    Markdown("...", in_expander=True, title="思考过程", state="complete"),
+        prompt_ = format_instruction(prompt_template_name_=prompt_template_name, passage_=render_context, caption_=render_captions, question_=question, options_=options)
+        text_ = ""
+        res = api.chat_chat(prompt_,
+                            history=[],
+                            model=llm_model,
+                            prompt_name=prompt_template_name,
+                            temperature=0.99)
+        for t in res:
+            if error_msg := check_error_msg(t):  # check whether error occured
+                st.error(error_msg)
+                break
+            text_ += t.get("text", "")
+            if len(text_) > 0:
+                global_ans = True
+                render_knowledge_bank_area()
+                render_select_key_sentence_and_caption_area()
 
-                ])
-            text = ""
-            ans = ""
-            for d in api.agent_chat(prompt,
-                                    history=history,
-                                    model=llm_model,
-                                    prompt_name=prompt_template_name,
-                                    temperature=temperature,
-                                    ):
-                try:
-                    d = json.loads(d)
-                except:
-                    pass
-                if error_msg := check_error_msg(d):  # check whether error occured
-                    st.error(error_msg)
-                if chunk := d.get("answer"):
-                    text += chunk
-                    chat_box.update_msg(text, element_index=1)
-                if chunk := d.get("final_answer"):
-                    ans += chunk
-                    chat_box.update_msg(ans, element_index=0)
-                if chunk := d.get("tools"):
-                    text += "\n\n".join(d.get("tools", []))
-                    chat_box.update_msg(text, element_index=1)
-            chat_box.update_msg(ans, element_index=0, streaming=False)
-            chat_box.update_msg(text, element_index=1, streaming=False)
-        elif dialogue_mode == "知识库问答":
-            chat_box.ai_say([
-                f"正在查询知识库 `{selected_kb}` ...",
-                Markdown("...", in_expander=True, title="知识库匹配结果", state="complete"),
-            ])
-            text = ""
-            for d in api.knowledge_base_chat(prompt,
-                                             knowledge_base_name=selected_kb,
-                                             top_k=kb_top_k,
-                                             score_threshold=score_threshold,
-                                             history=history,
-                                             model=llm_model,
-                                             prompt_name=prompt_template_name,
-                                             temperature=temperature):
-                if error_msg := check_error_msg(d):  # check whether error occured
-                    st.error(error_msg)
-                elif chunk := d.get("answer"):
-                    text += chunk
-                    chat_box.update_msg(text, element_index=0)
-            chat_box.update_msg(text, element_index=0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
-        elif dialogue_mode == "搜索引擎问答":
-            chat_box.ai_say([
-                f"正在执行 `{search_engine}` 搜索...",
-                Markdown("...", in_expander=True, title="网络搜索结果", state="complete"),
-            ])
-            text = ""
-            for d in api.search_engine_chat(prompt,
-                                            search_engine_name=search_engine,
-                                            top_k=se_top_k,
-                                            history=history,
-                                            model=llm_model,
-                                            prompt_name=prompt_template_name,
-                                            temperature=temperature,
-                                            split_result=se_top_k > 1):
-                if error_msg := check_error_msg(d):  # check whether error occured
-                    st.error(error_msg)
-                elif chunk := d.get("answer"):
-                    text += chunk
-                    chat_box.update_msg(text, element_index=0)
-            chat_box.update_msg(text, element_index=0, streaming=False)
-            chat_box.update_msg("\n\n".join(d.get("docs", [])), element_index=1, streaming=False)
+                answer = answer_area.chat_message("assistant")
+                answer.text(f'答案:{match_option(options, text_)}')
 
-    if st.session_state.get("need_rerun"):
-        st.session_state["need_rerun"] = False
-        st.rerun()
+    def reset_history():
+        global global_ans
+        # 重新加载页面
+        st.session_state["passage"] = ""
+        st.session_state["question"] = ""
+        st.session_state["options"] = ""
+        knowledge_bank_area.empty()
+        key_sentence_area.empty()
+        caption_divider.empty()
+        select_key_sentence_area.empty()
+        select_key_caption_area.empty()
+        answer_area.empty()
 
-    now = datetime.now()
-    with st.sidebar:
+        global_ans = False
 
-        cols = st.columns(2)
-        export_btn = cols[0]
-        if cols[1].button(
-                "清空对话",
-                use_container_width=True,
-        ):
-            chat_box.reset_history()
-            st.rerun()
-
-    export_btn.download_button(
-        "导出记录",
-        "".join(chat_box.export2md()),
-        file_name=f"{now:%Y-%m-%d %H.%M}_对话记录.md",
-        mime="text/markdown",
-        use_container_width=True,
-    )
+    with st.container():
+        left, right = st.columns(2)
+        with right:
+            clear_c, caption_c, submit_c = st.columns(3)
+            with clear_c:
+                st.button("清空", type="secondary", use_container_width=True, on_click=reset_history)
+            with caption_c:
+                if st.button("挖掘背景知识", type="primary", use_container_width=True):
+                    caption()
+            with submit_c:
+                if st.button("推理", type="primary", use_container_width=True):
+                    submit()

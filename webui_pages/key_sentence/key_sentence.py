@@ -156,19 +156,26 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
 
     st.divider()
     with st.container():
-        key_sentence_area = st.empty()
+        with st.expander("算法推理过程", expanded=True):
+            key_sentence_area = st.empty()
         answer_area = st.empty()
-        if global_ans:
-            key_sentence = key_sentence_area.chat_message("assistant")
-            key_sentence.caption("算法选择的关键句如下所示：")
-            key_sentence.markdown(KEYSENTENCE)
-            answer = answer_area.chat_message("assistant")
+        # if global_ans:
+        #     key_sentence = key_sentence_area.chat_message("assistant")
+        #     key_sentence.caption("算法选择的关键句如下所示：")
+        #     key_sentence.markdown(KEYSENTENCE)
+        #     answer = answer_area.chat_message("assistant")
+
+    def render_key_sentence_area():
+        key_sentence = key_sentence_area.chat_message("assistant")
+        key_sentence.caption("算法选择的关键句如下所示：")
+        key_sentence.markdown(KEYSENTENCE)
 
     def submit():
         global global_ans, KEYSENTENCE
 
         render_context = render_key_sentence(language='zh', question=question, options=options, context=passage, max_word_count=200)
         KEYSENTENCE = render_context
+        render_key_sentence_area()
 
         prompt_ = format_instruction(prompt_template_name, passage, question, options)
         text_ = ""
@@ -184,9 +191,6 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
             text_ += t.get("text", "")
             if len(text_) > 0:
                 global_ans = True
-                key_sentence = key_sentence_area.chat_message("assistant")
-                key_sentence.caption("算法选择的关键句如下所示：")
-                key_sentence.markdown(KEYSENTENCE)
                 answer = answer_area.chat_message("assistant")
                 answer.text(f'答案:{match_option(options, text_)}')
 
