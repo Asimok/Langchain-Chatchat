@@ -5,3 +5,5 @@ from .option1_cclue import Option1CCLUEWorker
 from .option1_quality import Option1QuALITYWorker
 from .option1_race import Option1RACEWorker
 from .option2_ncr_and_cclue import Option2NCRAndCCLUEWorker
+from .option2_quality import Option2QuALITYWorker
+from .option2_race import Option2RACEWorker
