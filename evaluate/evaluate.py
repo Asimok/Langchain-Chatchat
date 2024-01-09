@@ -33,6 +33,7 @@ def get_response(url, inputs, max_seq_length=2048, split_token='<question>:\n'):
 
 
 def predict(url, eval_file_path, save_path, max_seq_length=2048, split_token='<question>:\n'):
+    preds={}
     # makedir
     if not os.path.exists(save_path):
         os.makedirs(save_path)
@@ -49,9 +50,10 @@ def predict(url, eval_file_path, save_path, max_seq_length=2048, split_token='<q
         true_labels.append(label)
         pred = get_response(url, req_input, max_seq_length=max_seq_length, split_token=split_token)
         pred_labels.append(pred)
+        preds[conv['question_unique_id']] = pred
         # 格式化输出
-        if label == pred:
-            correct += 1
+        # if label == pred:
+        #     correct += 1
         print(
             f"\n{i + 1}\tlabel:{label}\tpred:{pred}\t{label == pred}\tacc:{correct / (i + 1)}\t")
     print('*' * 50)
@@ -67,6 +69,8 @@ def predict(url, eval_file_path, save_path, max_seq_length=2048, split_token='<q
     with open(f"{save_path}_eval.json", "w", encoding="utf-8") as f:
         f.write(json.dumps({"true_labels": true_labels, "pred_labels": pred_labels}, ensure_ascii=False, indent=4))
         f.write(metrics)
+    json.dump(preds, open(f"{save_path}_lc_llama2.json", "w", encoding="utf-8"), ensure_ascii=False, indent=4)
+    print(f"save to {save_path}_lc_llama2.json")
 
 
 if __name__ == '__main__':

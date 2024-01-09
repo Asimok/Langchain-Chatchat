@@ -15,7 +15,7 @@ def format_template(input_):
 def get_res(inputs):
     print('new')
     print(inputs)
-    url = "http://219.216.64.231:27032/option1_ncr_api"
+    url = "http://219.216.64.75:27032/option1_ncr_api"
     timeout = 60  # 超时设置
 
     # 生成超参数
@@ -26,11 +26,11 @@ def get_res(inputs):
     do_sample = True
     # 只需要支持单轮对话
 
-    print('option1_ncr_api llm_input:\n')
+    # print('option1_ncr_api llm_input:\n')
     llm_input = ''
     for his_input in inputs[-1:]:
         llm_input += format_template(his_input)
-    print(llm_input)
+    # print(llm_input)
     # 解析多轮对话
 
     params = {
@@ -47,7 +47,7 @@ def get_res(inputs):
     session = httpx.Client(base_url="", headers=headers)
     response = session.request("POST", url, json=params, timeout=timeout)
     result = json.loads(response.text)['response']
-    print(result)
+    # print(result)
     # 使用yield返回result
     return result
 

@@ -7,8 +7,8 @@ from evaluate import predict
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="cclue evaluate")
-    PHASES = ['dev']
-    parser.add_argument("--type", type=str, required=False, choices=PHASES, default='dev',
+    PHASES = ['test', 'dev']
+    parser.add_argument("--type", type=str, required=False, choices=PHASES, default='test',
                         help="datasets")
     args = parser.parse_args()
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     max_seq_length = 2048
     split_token = '<question>:\n'
 
-    url = "http://219.216.64.231:27035/option1_quality_api"
+    url = "http://219.216.64.75:27035/option1_quality_api"
     # eval_file_path = f"/data0/maqi/KGLQA-data/datasets/QuALITY/LangChain/select/{args.type}.jsonl"
     eval_file_path = f"/data0/maqi/KGLQA-data/datasets/QuALITY/LangChain/select_quality_and_race/{args.type}.jsonl"
     predict(url, eval_file_path, save_path, max_seq_length=max_seq_length, split_token=split_token)
