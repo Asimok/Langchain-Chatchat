@@ -6,7 +6,7 @@ from streamlit_chatbox import *
 from datetime import datetime
 import os
 from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
+                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE)
 from typing import List, Dict
 
 chat_box = ChatBox(

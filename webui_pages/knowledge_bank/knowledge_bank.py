@@ -4,7 +4,7 @@ import requests
 import streamlit as st
 from webui_pages.utils import *
 
-from configs import (PROMPT_TEMPLATES)
+from configs import (PROMPT_TEMPLATES, KNOWLEDGE_BANK_HOST)
 
 global_ans = False
 KEYSENTENCE = ''
@@ -13,14 +13,13 @@ CUR_LLM = 'quality'
 render_pair = []
 render_context, render_captions = '', ''
 LABEL_TO_ID_DICT = {"A": 0, "B": 1, "C": 2, "D": 3}
-HOST = '219.216.64.75'
 
 
 def get_caption(language, context, caption_max_seq_length):
     if language == 'zh':
-        url = f'http://{HOST}:27028/knowledge_bank_zh'
+        url = f'{KNOWLEDGE_BANK_HOST}:27028/knowledge_bank_zh'
     else:
-        url = f'http://{HOST}:27027/knowledge_bank_en'
+        url = f'{KNOWLEDGE_BANK_HOST}:27027/knowledge_bank_en'
     data = {
         "context": context,
         "caption_max_seq_length": caption_max_seq_length,
@@ -32,9 +31,9 @@ def get_caption(language, context, caption_max_seq_length):
 
 def get_caption_and_rel(language, query, options, context_data, caption_data, max_word_count=1536):
     if language == 'zh':
-        url = f'http://{HOST}:27028/knowledge_bank_get_rel_zh'
+        url = f'{KNOWLEDGE_BANK_HOST}:27028/knowledge_bank_get_rel_zh'
     else:
-        url = f'http://{HOST}:27027/knowledge_bank_get_rel_en'
+        url = f'{KNOWLEDGE_BANK_HOST}:27027/knowledge_bank_get_rel_en'
     data = {
         "query": query,
         "options": options,

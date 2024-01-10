@@ -1,26 +1,19 @@
-import random
-
 import requests
 import streamlit as st
 from webui_pages.utils import *
-from streamlit_chatbox import *
-from datetime import datetime
-import os
-from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
-                     DEFAULT_KNOWLEDGE_BASE, DEFAULT_SEARCH_ENGINE, SUPPORT_AGENT_MODEL)
-from typing import List, Dict
+
+from configs import PROMPT_TEMPLATES, LABEL_TO_ID_DICT, KEY_SENTENCE_HOST
 
 global_ans = False
 KEYSENTENCE = '测试'
 CUR_LLM = 'quality'
-LABEL_TO_ID_DICT = {"A": 0, "B": 1, "C": 2, "D": 3}
 
 
 def get_key_sentence(language, query, options, context, max_word_count=1536):
     if language == 'zh':
-        url = 'http://219.216.64.75:27030/key_sentence_zh'
+        url = f'{KEY_SENTENCE_HOST}:27030/key_sentence_zh'
     else:
-        url = 'http://219.216.64.75:27029/key_sentence_en'
+        url = f'{KEY_SENTENCE_HOST}:27029/key_sentence_en'
     data = {
         "context": context,
         "query": query,

@@ -2,6 +2,8 @@ import json
 
 import httpx
 from fastchat.conversation import Conversation
+
+from configs import MODEL_HOST
 from server.model_workers.base import *
 from fastchat import conversation as conv
 import sys
@@ -15,7 +17,7 @@ def format_template(input_):
 def get_res(inputs):
     print('new')
     print(inputs)
-    url = "http://219.216.64.231:27036/option2_ncr_and_cclue_api"
+    url =  f"{MODEL_HOST}:27036/option2_ncr_and_cclue_api"
     timeout = 60  # 超时设置
 
     # 生成超参数
