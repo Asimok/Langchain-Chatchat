@@ -10,10 +10,10 @@ from configs import (TEMPERATURE, HISTORY_LEN, PROMPT_TEMPLATES,
 from typing import List, Dict
 
 chat_box = ChatBox(
-    assistant_avatar=os.path.join(
-        "img",
-        "chatchat_icon_blue_square_v2.png"
-    )
+    # assistant_avatar=os.path.join(
+    #     "img",
+    #     "chatchat_icon_blue_square_v2.png"
+    # )
 )
 
 
