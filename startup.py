@@ -25,14 +25,14 @@ from configs import (
     EMBEDDING_MODEL,
     TEXT_SPLITTER_NAME,
     FSCHAT_CONTROLLER,
-    FSCHAT_OPENAI_API,
+    FSCHAT_SYSTEM_API,
     FSCHAT_MODEL_WORKERS,
     API_SERVER,
     WEBUI_SERVER,
     HTTPX_DEFAULT_TIMEOUT,
 )
 from server.utils import (fschat_controller_address, fschat_model_worker_address,
-                          fschat_openai_api_address, set_httpx_config, get_httpx_client,
+                          fschat_system_api_address, set_httpx_config, get_httpx_client,
                           get_model_worker_config, get_all_model_worker_configs,
                           MakeFastAPIOffline, FastAPI, llm_device, embedding_device)
 import argparse
@@ -414,8 +414,8 @@ def run_openai_api(log_level: str = "INFO", started_event: mp.Event = None):
     app = create_openai_api_app(controller_addr, log_level=log_level)  # TODO: not support keys yet.
     _set_app_event(app, started_event)
 
-    host = FSCHAT_OPENAI_API["host"]
-    port = FSCHAT_OPENAI_API["port"]
+    host = FSCHAT_SYSTEM_API["host"]
+    port = FSCHAT_SYSTEM_API["port"]
     if log_level == "ERROR":
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
@@ -582,11 +582,11 @@ def dump_server_info(after_start=False, args=None):
         print("\n")
         print(f"服务端运行信息：")
         if args.openai_api:
-            print(f"    OpenAI API Server: {fschat_openai_api_address()}")
+            print(f"    System API Server: {fschat_system_api_address()}")
         if args.api:
-            print(f"    Chatchat  API  Server: {api_address()}")
+            print(f"    KGLQA  API  Server: {api_address()}")
         if args.webui:
-            print(f"    Chatchat WEBUI Server: {webui_address()}")
+            print(f"    KGLQA WEBUI Server: {webui_address()}")
     print("=" * 30 + "Langchain-Chatchat Configuration" + "=" * 30)
     print("\n")
 
@@ -876,18 +876,3 @@ if __name__ == "__main__":
         asyncio.set_event_loop(loop)
     # 同步调用协程代码
     loop.run_until_complete(start_main_server())
-
-# 服务启动后接口调用示例：
-# import openai
-# openai.api_key = "EMPTY" # Not support yet
-# openai.api_base = "http://localhost:8888/v1"
-
-# model = "chatglm2-6b"
-
-# # create a chat completion
-# completion = openai.ChatCompletion.create(
-#   model=model,
-#   messages=[{"role": "user", "content": "Hello! What is your name?"}]
-# )
-# # print the completion
-# print(completion.choices[0].message.content)

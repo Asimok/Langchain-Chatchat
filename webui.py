@@ -21,8 +21,8 @@ if __name__ == "__main__":
         os.path.join("img", "chatchat_icon_blue_square_v2.png"),
         initial_sidebar_state="expanded",
         menu_items={
-            'Get Help': 'https://github.com/chatchat-space/Langchain-Chatchat',
-            'Report a bug': "https://github.com/chatchat-space/Langchain-Chatchat/issues",
+            'Get Help': 'https://github.com/asimok/Langchain-Chatchat',
+            'Report a bug': "https://github.com/asimok/Langchain-Chatchat/issues",
             'About': f"""欢迎使用 KGLQA WebUI {VERSION}！"""
         },
         layout='wide',

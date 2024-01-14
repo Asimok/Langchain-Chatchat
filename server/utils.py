@@ -48,7 +48,7 @@ def get_ChatOpenAI(
         verbose=verbose,
         callbacks=callbacks,
         openai_api_key=config.get("api_key", "EMPTY"),
-        openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+        openai_api_base=config.get("api_base_url", fschat_system_api_address()),
         model_name=model_name,
         temperature=temperature,
         max_tokens=max_tokens,
@@ -121,7 +121,7 @@ def get_OpenAI(
             verbose=verbose,
             callbacks=callbacks,
             openai_api_key=config.get("api_key", "EMPTY"),
-            openai_api_base=config.get("api_base_url", fschat_openai_api_address()),
+            openai_api_base=config.get("api_base_url", fschat_system_api_address()),
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -440,13 +440,13 @@ def fschat_model_worker_address(model_name: str = LLM_MODELS[0]) -> str:
     return ""
 
 
-def fschat_openai_api_address() -> str:
-    from configs.server_config import FSCHAT_OPENAI_API
+def fschat_system_api_address() -> str:
+    from configs.server_config import FSCHAT_SYSTEM_API
 
-    host = FSCHAT_OPENAI_API["host"]
+    host = FSCHAT_SYSTEM_API["host"]
     if host == "0.0.0.0":
         host = "127.0.0.1"
-    port = FSCHAT_OPENAI_API["port"]
+    port = FSCHAT_SYSTEM_API["port"]
     return f"http://{host}:{port}/v1"
 
 
@@ -523,7 +523,7 @@ def set_httpx_config(
     for x in [
         fschat_controller_address(),
         fschat_model_worker_address(),
-        fschat_openai_api_address(),
+        fschat_system_api_address(),
     ]:
         host = ":".join(x.split(":")[:2])
         if host not in no_proxy:
@@ -603,7 +603,7 @@ def get_httpx_client(
     for x in [
         fschat_controller_address(),
         fschat_model_worker_address(),
-        fschat_openai_api_address(),
+        fschat_system_api_address(),
     ]:
         host = ":".join(x.split(":")[:2])
         default_proxies.update({host: None})
@@ -667,7 +667,7 @@ def get_server_configs() -> Dict:
 
     _custom = {
         "controller_address": fschat_controller_address(),
-        "openai_api_address": fschat_openai_api_address(),
+        "openai_api_address": fschat_system_api_address(),
         "api_address": api_address(),
     }
 

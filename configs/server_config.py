@@ -24,7 +24,7 @@ API_SERVER = {
 }
 
 # fastchat openai_api server
-FSCHAT_OPENAI_API = {
+FSCHAT_SYSTEM_API = {
     "host": DEFAULT_BIND_HOST,
     "port": 20000,
 }

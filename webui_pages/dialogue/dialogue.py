@@ -41,7 +41,7 @@ def dialogue_page(api: ApiRequest, is_lite: bool = False):
     if not chat_box.chat_inited:
         default_model = api.get_default_llm_model()[0]
         st.toast(
-            f"欢迎使用 [`Langchain-Chatchat`](https://github.com/chatchat-space/Langchain-Chatchat) ! \n\n"
+            f"欢迎使用 [`Langchain-Chatchat`](https://github.com/asimok/Langchain-Chatchat) ! \n\n"
             f"当前运行的模型`{default_model}`, 您可以开始提问了."
         )
         chat_box.init_session()
