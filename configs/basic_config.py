@@ -10,7 +10,7 @@ langchain.verbose = True
 SAVE_CHAT_HISTORY = True
 
 # LLM api HOST
-MODEL_HOST = 'http://219.216.64.231'
+MODEL_HOST = 'http://219.216.64.75'
 # 关键句选择方案 host
 KEY_SENTENCE_HOST = 'http://219.216.64.75'
 
