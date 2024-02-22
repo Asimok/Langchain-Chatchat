@@ -1,21 +1,13 @@
-# prompt模板使用Jinja2语法，简单点就是用双大括号代替f-string的单大括号
+# prompt模板使用Jinja2语法，用双大括号代替f-string的单大括号
 # 本配置文件支持热加载，修改prompt模板后无需重启服务。
 
 
 # LLM对话支持的变量：
 #   - input: 用户输入内容
 
-# 知识库和搜索引擎对话支持的变量：
+# 知识库对话支持的变量：
 #   - context: 从检索结果拼接的知识文本
 #   - question: 用户提出的问题
-
-# Agent对话支持的变量：
-
-#   - tools: 可用的工具列表
-#   - tool_names: 可用的工具名称列表
-#   - history: 用户和Agent的对话历史
-#   - input: 用户输入内容
-#   - agent_scratchpad: Agent的思维记录
 
 """
 'Read the following passage and questions, then choose the right answer from options, the answer should be one of A, B, C, D.\n\n'
@@ -51,7 +43,7 @@ PROMPT_TEMPLATES = {
     "knowledge_base_chat": {
         "instruction-en":
             """
-            'Read the following passage and questions, then choose the right answer from options, the answer should be one of A, B, C, D.\n\n'
+            'Read the following passage and question, then choose the right answer from options, the answer should be one of A, B, C, D.\n\n'
             <passage>:
             {{ context }}
             <question>:
@@ -60,7 +52,7 @@ PROMPT_TEMPLATES = {
             """,
         "instruction-zh":
             """
-            '阅读以下段落、摘要和问题，然后从选项中选择正确答案，答案应为A、B、C、D中的一个。\n\n'
+            '阅读以下段落和问题，然后从选项中选择正确答案，答案应为A、B、C、D中的一个。\n\n'
             <段落>:
             {{ context }}
             <问题>:
