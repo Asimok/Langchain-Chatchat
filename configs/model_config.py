@@ -19,7 +19,7 @@ EMBEDDING_MODEL_OUTPUT_PATH = "output"
 # 第一个将作为 API 和 WEBUI 的默认模型
 # LLM_MODELS = ["TechGPT-7B", "TechGPT-api", "chatglm2-6b", "zhipu-api", "openai-api"]
 # LLM_MODELS = ["techgpt-api", "option1-ncr-api", "option1-cclue-api", "option1-race-api", "option1-quality-api"]
-LLM_MODELS = ["option1-ncr-api", "option1-cclue-api", "option2-quality-api"]
+LLM_MODELS = ["option1-ncr-api", "option1-cclue-api", "techgpt-api",'option2-ncr-and-cclue-api']
 
 # AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是LLM_MODELS[0])
 Agent_MODEL = None

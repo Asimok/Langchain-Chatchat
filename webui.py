@@ -33,7 +33,7 @@ if __name__ == "__main__":
             "icon": "chat",
             "func": key_sentence_page,
         },
-        "Knowledge Bank方案": {
+        "摘要辅助方案": {
             "icon": "chat",
             "func": knowledge_bank_page,
         },

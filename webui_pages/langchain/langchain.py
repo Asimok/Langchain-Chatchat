@@ -136,8 +136,10 @@ def langchain_page(api: ApiRequest, is_lite: bool = False):
             key="prompt_template_select",
         )
         prompt_template_name = st.session_state.prompt_template_select
-        temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
-        history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
+        # temperature = st.slider("Temperature：", 0.0, 1.0, TEMPERATURE, 0.05)
+        # history_len = st.number_input("历史对话轮数：", 0, 20, HISTORY_LEN)
+        history_len =HISTORY_LEN
+        temperature=TEMPERATURE
 
         def on_kb_change():
             st.toast(f"已加载知识库： {st.session_state.selected_kb}")
@@ -228,19 +230,21 @@ def langchain_page(api: ApiRequest, is_lite: bool = False):
     now = datetime.now()
     with st.sidebar:
 
-        cols = st.columns(2)
-        export_btn = cols[0]
-        if cols[1].button(
-                "清空对话",
-                use_container_width=True,
-        ):
+        # cols = st.columns(2)
+        # export_btn = cols[0]
+        clear_btn=st.button("清空对话",use_container_width=True,)
+        # if cols[1].button(
+        #         "清空对话",
+        #         use_container_width=True,
+        # ):
+        if clear_btn:
             chat_box.reset_history()
             st.rerun()
 
-    export_btn.download_button(
-        "导出记录",
-        "".join(chat_box.export2md()),
-        file_name=f"{now:%Y-%m-%d %H.%M}_对话记录.md",
-        mime="text/markdown",
-        use_container_width=True,
-    )
+    # export_btn.download_button(
+    #     "导出记录",
+    #     "".join(chat_box.export2md()),
+    #     file_name=f"{now:%Y-%m-%d %H.%M}_对话记录.md",
+    #     mime="text/markdown",
+    #     use_container_width=True,
+    # )

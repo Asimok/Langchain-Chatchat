@@ -69,6 +69,7 @@ def match_option(options, answer):
 
 
 def render_caption_and_rel(language, query, options, context_data, caption_data, max_word_count=1536):
+    print('render_caption_and_rel...')
     res = get_caption_and_rel(language, query, options, context_data, caption_data, max_word_count)
     context_data = res['context_data']
     contexts_idx = res['contexts_idx']
@@ -87,6 +88,7 @@ def render_caption_and_rel(language, query, options, context_data, caption_data,
             render_captions.append(add_color(c))
         else:
             render_captions.append(c)
+    print('render_captions:', render_captions)
     return render_context, render_captions
 
 
@@ -102,7 +104,7 @@ def render_knowledge_bank(language, context, caption_max_seq_length=250):
 
 
 def knowledge_bank_page(api: ApiRequest, is_lite: bool = False):
-    global global_ans, KEYSENTENCE, KNOWLEDGEBANK
+    global CUR_LLM, global_ans, KEYSENTENCE, KNOWLEDGEBANK
 
     with st.sidebar:
         def on_llm_change():
@@ -111,6 +113,8 @@ def knowledge_bank_page(api: ApiRequest, is_lite: bool = False):
                 if not config.get("online_api"):  # 只有本地model_worker可以切换模型
                     st.session_state["prev_llm_model"] = llm_model
                 st.session_state["cur_llm_model"] = st.session_state.llm_model
+            st.toast(f"已切换LLM： {st.session_state.llm_model}")
+            CUR_LLM = st.session_state.llm_model
 
         def llm_model_format_func(x):
             if x in running_models:

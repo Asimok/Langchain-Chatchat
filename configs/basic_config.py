@@ -9,13 +9,14 @@ langchain.verbose = True
 # 是否保存聊天记录
 SAVE_CHAT_HISTORY = True
 
+# http://202.199.6.77:27030
 # LLM api HOST
-MODEL_HOST = 'http://219.216.64.75'
+MODEL_HOST = 'http://219.216.64.116'
 # 关键句选择方案 host
-KEY_SENTENCE_HOST = 'http://219.216.64.75'
+KEY_SENTENCE_HOST = 'http://202.199.6.77'
 
 # Knowledge Bank方案 host
-KNOWLEDGE_BANK_HOST = 'http://219.216.64.75'
+KNOWLEDGE_BANK_HOST = 'http://202.199.6.77'
 
 # answer id
 LABEL_TO_ID_DICT = {"A": 0, "B": 1, "C": 2, "D": 3}

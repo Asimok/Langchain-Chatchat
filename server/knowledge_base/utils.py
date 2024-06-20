@@ -57,11 +57,11 @@ def list_files_from_folder(kb_name: str):
     for root, _, files in os.walk(doc_path):
         tail = os.path.basename(root).lower()
         if (tail.startswith("temp")
-            or tail.startswith("tmp")
-            or tail.startswith(".")): # 跳过 [temp, tmp, .] 开头的文件夹
+                or tail.startswith("tmp")
+                or tail.startswith(".")):  # 跳过 [temp, tmp, .] 开头的文件夹
             continue
         for file in files:
-            if file.startswith("~$"): # 跳过 ~$ 开头的文件
+            if file.startswith("~$"):  # 跳过 ~$ 开头的文件
                 continue
             path = Path(doc_path) / root / file
             result.append(path.resolve().relative_to(doc_path).as_posix())
@@ -69,18 +69,27 @@ def list_files_from_folder(kb_name: str):
     return result
 
 
-LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
-               "UnstructuredMarkdownLoader": ['.md'],
-               "CustomJSONLoader": [".json"],
-               "CSVLoader": [".csv"],
-               # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
-               "RapidOCRPDFLoader": [".pdf"],
-               "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
-               "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
-                                          '.rtf', '.txt', '.xml',
-                                          '.docx', '.epub', '.odt',
-                                          '.ppt', '.pptx', '.tsv'],
-               }
+# LOADER_DICT = {"UnstructuredHTMLLoader": ['.html'],
+#                "UnstructuredMarkdownLoader": ['.md'],
+#                "CustomJSONLoader": [".json"],
+#                "CSVLoader": [".csv"],
+#                # "FilteredCSVLoader": [".csv"], # 需要自己指定，目前还没有支持
+#                "RapidOCRPDFLoader": [".pdf"],
+#                "RapidOCRLoader": ['.png', '.jpg', '.jpeg', '.bmp'],
+#                "UnstructuredFileLoader": ['.eml', '.msg', '.rst',
+#                                           '.rtf', '.txt', '.xml',
+#                                           '.docx', '.epub', '.odt',
+#                                           '.ppt', '.pptx', '.tsv'],
+#                }
+LOADER_DICT = {
+    "UnstructuredMarkdownLoader": ['.md'],
+    "CustomJSONLoader": [".json"],
+
+    "RapidOCRPDFLoader": [".pdf"],
+
+    "UnstructuredFileLoader": ['.txt',
+                               '.docx'],
+}
 SUPPORTED_EXTS = [ext for sublist in LOADER_DICT.values() for ext in sublist]
 
 
@@ -152,7 +161,7 @@ def get_loader(loader_name: str, file_path_or_content: Union[str, bytes, io.Stri
     根据loader_name和文件路径或内容返回文档加载器。
     '''
     try:
-        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader","FilteredCSVLoader"]:
+        if loader_name in ["RapidOCRPDFLoader", "RapidOCRLoader", "FilteredCSVLoader"]:
             document_loaders_module = importlib.import_module('document_loaders')
         else:
             document_loaders_module = importlib.import_module('langchain.document_loaders')

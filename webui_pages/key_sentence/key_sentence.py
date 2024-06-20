@@ -166,10 +166,10 @@ def key_sentence_page(api: ApiRequest, is_lite: bool = False):
             """
             st.session_state["options"] = """A#People from Earth would have colonized the Procyon system.\nB#Captain Llud would have become a hero.\nC#The other two Quest ships would have been launched.\nD#Humanity would have died out.
             """
-        else:
-            st.session_state["passage"] = ""
-            st.session_state["question"] = ""
-            st.session_state["options"] = ""
+        # else:
+        #     st.session_state["passage"] = ""
+        #     st.session_state["question"] = ""
+        #     st.session_state["options"] = ""
         passage_c, option_c = st.columns([3, 1])
         with passage_c:
             passage = st.text_area("段落", placeholder="请输入段落... ", height=250, key="passage")
